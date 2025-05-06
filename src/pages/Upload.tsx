@@ -60,15 +60,16 @@ const Upload = () => {
     setIsLoading(true);
 
     // Simulate processing delay
-    setTimeout(() => {
+
       // In a real app, we'd send the file to the backend and process it
       navigate('/results', { 
         state: { 
-          fileName: selectedFile.name,
+          fileName: selectedFile,
           generatedTypes: selectedOptions,
         } 
       });
-    }, 2000);
+
+      setIsLoading(false);
   };
 
   const generateOptions = [

@@ -8,72 +8,8 @@ import { ArrowLeft, Book, BookOpen, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from "sonner";
 
-// Mock data for demonstration
-const mockSummary = `
-The cell is the fundamental unit of life. All organisms are made up of cells, and cells come from pre-existing cells. The cell theory, developed in the 19th century, states these principles and forms the basis of modern biology.
-
-Cells contain various organelles with specific functions:
-- Nucleus: Contains DNA and controls cell activities
-- Mitochondria: Generates energy through cellular respiration
-- Endoplasmic Reticulum: Synthesizes proteins and lipids
-- Golgi Apparatus: Modifies, sorts, and packages proteins
-- Lysosomes: Contain digestive enzymes for waste breakdown
-
-Cells can be broadly categorized into prokaryotic (bacteria, archaea) and eukaryotic (plants, animals, fungi). Prokaryotic cells lack a nucleus and membrane-bound organelles, while eukaryotic cells have these features.
-`;
-
-const mockFlashcards = [
-  {
-    question: "What is the fundamental unit of life?",
-    answer: "The cell is the fundamental unit of life."
-  },
-  {
-    question: "What are the two broad categories of cells?",
-    answer: "Prokaryotic (bacteria, archaea) and eukaryotic (plants, animals, fungi)."
-  },
-  {
-    question: "What organelle generates energy through cellular respiration?",
-    answer: "Mitochondria"
-  },
-  {
-    question: "What principle states that cells come from pre-existing cells?",
-    answer: "Cell theory"
-  },
-  {
-    question: "Which organelle contains digestive enzymes for waste breakdown?",
-    answer: "Lysosomes"
-  }
-];
-
-const mockMindMap = [
-  {
-    title: "Cell",
-    children: [
-      {
-        title: "Cell Theory",
-        details: "All organisms made of cells; cells are the basic unit of life; cells come from pre-existing cells"
-      },
-      {
-        title: "Types",
-        children: [
-          { title: "Prokaryotic", details: "No nucleus, bacteria & archaea" },
-          { title: "Eukaryotic", details: "Has nucleus, plants & animals" }
-        ]
-      },
-      {
-        title: "Organelles",
-        children: [
-          { title: "Nucleus", details: "Contains DNA" },
-          { title: "Mitochondria", details: "Energy production" },
-          { title: "ER", details: "Protein & lipid synthesis" },
-          { title: "Golgi", details: "Protein modification & packaging" },
-          { title: "Lysosomes", details: "Waste breakdown" }
-        ]
-      }
-    ]
-  }
-];
-
+let summary, flashcards=[], mindmap=[];
+let altSummary, altFlashcards, altMindmap;
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,8 +18,11 @@ const Results = () => {
   const [darkMode, setDarkMode] = useState(document.documentElement.classList.contains('dark'));
 
   // Get the data passed from the Upload page
-  const { fileName, generatedTypes } = location.state || {};
-
+  const fileName = location.state?.fileName?.name;
+  const file = location.state?.fileName ;
+  const generatedTypes = location.state?.generatedTypes.join(',') || '';
+  console.log("generatedTypes:", generatedTypes);
+  fetchResult(file, generatedTypes);
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle('dark');
@@ -104,11 +43,11 @@ const Results = () => {
   }, [fileName, navigate]);
 
   const handleNextCard = () => {
-    setCurrentCardIndex((currentCardIndex + 1) % mockFlashcards.length);
+    setCurrentCardIndex((currentCardIndex + 1) % flashcards.length);
   };
 
   const handlePrevCard = () => {
-    setCurrentCardIndex((currentCardIndex - 1 + mockFlashcards.length) % mockFlashcards.length);
+    setCurrentCardIndex((currentCardIndex - 1 + flashcards.length) % flashcards.length);
   };
 
   // Render MindMap node recursively
@@ -126,7 +65,7 @@ const Results = () => {
 
   const downloadSummary = () => {
     const element = document.createElement("a");
-    const file = new Blob([mockSummary], {type: 'text/plain'});
+    const file = new Blob([summary], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
     element.download = `${fileName || 'summary'}_summary.txt`;
     document.body.appendChild(element);
@@ -136,7 +75,7 @@ const Results = () => {
   };
 
   const downloadFlashcards = () => {
-    const content = mockFlashcards.map(card => `Question: ${card.question}\nAnswer: ${card.answer}\n\n`).join('');
+    const content = flashcards.map(card => `Question: ${card.question}\nAnswer: ${card.answer}\n\n`).join('');
     const element = document.createElement("a");
     const file = new Blob([content], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
@@ -163,7 +102,7 @@ const Results = () => {
       return result;
     };
 
-    const content = convertMindMapToText(mockMindMap);
+    const content = convertMindMapToText(mindmap);
     const element = document.createElement("a");
     const file = new Blob([content], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
@@ -248,7 +187,7 @@ const Results = () => {
                     </button>
                   </div>
                   <div className="whitespace-pre-line text-gray-700 dark:text-gray-300">
-                    {mockSummary}
+                    {summary}
                   </div>
                 </div>
               </TabsContent>
@@ -258,8 +197,8 @@ const Results = () => {
               <TabsContent value="flashcards">
                 <div className="flex flex-col items-center">
                   <Flashcard 
-                    question={mockFlashcards[currentCardIndex].question}
-                    answer={mockFlashcards[currentCardIndex].answer}
+                    question={flashcards[currentCardIndex].question}
+                    answer={flashcards[currentCardIndex].answer}
                     className="max-w-md mb-6"
                   />
                   <div className="flex gap-4 items-center mb-6">
@@ -270,7 +209,7 @@ const Results = () => {
                       Previous
                     </button>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Card {currentCardIndex + 1} of {mockFlashcards.length}
+                      Card {currentCardIndex + 1} of {flashcards.length}
                     </div>
                     <button 
                       onClick={handleNextCard}
@@ -305,7 +244,7 @@ const Results = () => {
                       <span>Download</span>
                     </button>
                   </div>
-                  {mockMindMap.map(node => renderMindMapNode(node))}
+                  {mindmap.map(node => renderMindMapNode(node))}
                 </div>
               </TabsContent>
             )}
@@ -328,3 +267,40 @@ const Results = () => {
 };
 
 export default Results;
+function fetchResult(file: any, generatedTypes: any) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('prompt', generatedTypes);
+
+  fetch('http://127.0.0.1:9000/chat-with-attachment', {
+    method: 'POST',
+    body: formData,
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to process the file');
+      }
+      const json = response.json();
+      // summary= response.json().
+      // flashcards=
+      // mindmap;
+      console.log('Response:', json);
+      return json;
+    })
+    .then(data => {
+      console.log('Response:', data);
+      summary = data['response']?.summary || null;
+      altSummary = data['response']?.['alt-summary'] || null;
+      flashcards = data['response']?.flashcards || null;
+      altFlashcards = data['response']?.['alt-flashcards'] || null;
+      mindmap = typeof data['response']?.mindmap === 'string' ? JSON.parse(data['response']?.mindmap) : data['response']?.mindmap || null; altMindmap = data['response']?.['alt-mindmap'] || null;
+      toast.success('File processed successfully');
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      toast.error('An error occurred while processing the file');
+    })
+    .finally(() => {
+    });
+}
+
