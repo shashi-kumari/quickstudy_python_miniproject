@@ -235,7 +235,7 @@ const Results = () => {
                     </button>
                   </div>
                   <div className="whitespace-pre-line text-gray-700 dark:text-gray-300">
-                    {summary}
+                    {summary || altSummary || 'No summary available.'}
                   </div>
                 </div>
               </TabsContent>
@@ -243,57 +243,69 @@ const Results = () => {
 
             {generatedTypes && generatedTypes.includes('flashcards') && (
               <TabsContent value="flashcards">
-                <div className="flex flex-col items-center">
-                  <Flashcard 
-                    question={flashcards[currentCardIndex].question}
-                    answer={flashcards[currentCardIndex].answer}
-                    className="max-w-md mb-6"
-                  />
-                  <div className="flex gap-4 items-center mb-6">
-                    <button 
-                      onClick={handlePrevCard}
-                      className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} text-gray-800 dark:text-white px-4 py-2 rounded-lg transition`}
-                    >
-                      Previous
-                    </button>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Card {currentCardIndex + 1} of {flashcards.length}
+                {flashcards && flashcards.length > 0 ? (
+                  <div className="flex flex-col items-center">
+                    <Flashcard 
+                      question={flashcards[currentCardIndex].question}
+                      answer={flashcards[currentCardIndex].answer}
+                      className="max-w-md mb-6"
+                    />
+                    <div className="flex gap-4 items-center mb-6">
+                      <button 
+                        onClick={handlePrevCard}
+                        className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} text-gray-800 dark:text-white px-4 py-2 rounded-lg transition`}
+                      >
+                        Previous
+                      </button>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Card {currentCardIndex + 1} of {flashcards.length}
+                      </div>
+                      <button 
+                        onClick={handleNextCard}
+                        className="bg-quickstudy-purple hover:bg-opacity-90 text-white px-4 py-2 rounded-lg transition"
+                      >
+                        Next
+                      </button>
                     </div>
                     <button 
-                      onClick={handleNextCard}
-                      className="bg-quickstudy-purple hover:bg-opacity-90 text-white px-4 py-2 rounded-lg transition"
+                      onClick={downloadFlashcards}
+                      className="flex items-center gap-2 bg-quickstudy-teal text-white px-4 py-2 rounded-lg hover:bg-quickstudy-teal/90 transition-colors"
+                      aria-label="Download flashcards"
                     >
-                      Next
+                      <Download className="w-4 h-4" />
+                      <span>Download All Flashcards</span>
                     </button>
                   </div>
-                  <button 
-                    onClick={downloadFlashcards}
-                    className="flex items-center gap-2 bg-quickstudy-teal text-white px-4 py-2 rounded-lg hover:bg-quickstudy-teal/90 transition-colors"
-                    aria-label="Download flashcards"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download All Flashcards</span>
-                  </button>
-                </div>
+                ) : (
+                  <div className="whitespace-pre-line text-gray-700 dark:text-gray-300">
+                    {altFlashcards || 'No flashcards available.'}
+                  </div>
+                )}
               </TabsContent>
             )}
 
             {generatedTypes && generatedTypes.includes('mindmap') && (
               <TabsContent value="mindmap">
-                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-6 rounded-xl border ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold dark:text-white">Mind Map & Key Connections</h2>
-                    <button 
-                      onClick={downloadMindMap}
-                      className="flex items-center gap-2 bg-quickstudy-blue text-white px-3 py-2 rounded-lg hover:bg-quickstudy-blue/90 transition-colors"
-                      aria-label="Download mind map"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Download</span>
-                    </button>
+                {mindmap && mindmap.length > 0 ? (
+                  <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-6 rounded-xl border ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-semibold dark:text-white">Mind Map & Key Connections</h2>
+                      <button 
+                        onClick={downloadMindMap}
+                        className="flex items-center gap-2 bg-quickstudy-blue text-white px-3 py-2 rounded-lg hover:bg-quickstudy-blue/90 transition-colors"
+                        aria-label="Download mind map"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Download</span>
+                      </button>
+                    </div>
+                    {mindmap.map(node => renderMindMapNode(node))}
                   </div>
-                  {mindmap.map(node => renderMindMapNode(node))}
-                </div>
+                ) : (
+                  <div className="whitespace-pre-line text-gray-700 dark:text-gray-300">
+                    {altMindmap || 'No mind map available.'}
+                  </div>
+                )}
               </TabsContent>
             )}
           </Tabs>
