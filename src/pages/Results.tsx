@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from '@/components/ui/logo';
@@ -16,13 +15,14 @@ const Results = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [activeContent, setActiveContent] = useState('');
   const [darkMode, setDarkMode] = useState(document.documentElement.classList.contains('dark'));
+  const [loading, setLoading] = useState(true); // Add loading state
 
   // Get the data passed from the Upload page
   const fileName = location.state?.fileName?.name;
   const file = location.state?.fileName ;
   const generatedTypes = location.state?.generatedTypes.join(',') || '';
   console.log("generatedTypes:", generatedTypes);
-  fetchResult(file, generatedTypes);
+
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle('dark');
@@ -41,6 +41,10 @@ const Results = () => {
       navigate('/upload');
     }
   }, [fileName, navigate]);
+
+  useEffect(() => {
+    fetchResult(file, generatedTypes);
+  }, [file, generatedTypes]);
 
   const handleNextCard = () => {
     setCurrentCardIndex((currentCardIndex + 1) % flashcards.length);
@@ -112,6 +116,50 @@ const Results = () => {
     document.body.removeChild(element);
     toast.success("Mind map downloaded successfully");
   };
+
+  const fetchResult = (file: any, generatedTypes: any) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('prompt', generatedTypes);
+
+    fetch('http://127.0.0.1:9000/chat-with-attachment', {
+      method: 'POST',
+      body: formData,
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to process the file');
+        }
+        return response.json();
+      })
+      .then(data => {
+        summary = data['response']?.summary || null;
+        altSummary = data['response']?.['alt-summary'] || null;
+        flashcards = data['response']?.flashcards || null;
+        altFlashcards = data['response']?.['alt-flashcards'] || null;
+        mindmap = typeof data['response']?.mindmap === 'string' ? JSON.parse(data['response']?.mindmap) : data['response']?.mindmap || null;
+        altMindmap = data['response']?.['alt-mindmap'] || null;
+        toast.success('File processed successfully');
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        toast.error('An error occurred while processing the file');
+      })
+      .finally(() => {
+        setLoading(false); // Set loading to false after fetch completes
+      });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-quickstudy-purple"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Processing your file, please wait...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen flex flex-col ${darkMode ? 'dark bg-quickstudy-darkbg text-white' : 'bg-gradient-to-br from-white to-purple-50'}`}>
@@ -267,40 +315,4 @@ const Results = () => {
 };
 
 export default Results;
-function fetchResult(file: any, generatedTypes: any) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('prompt', generatedTypes);
-
-  fetch('http://127.0.0.1:9000/chat-with-attachment', {
-    method: 'POST',
-    body: formData,
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to process the file');
-      }
-      const json = response.json();
-      // summary= response.json().
-      // flashcards=
-      // mindmap;
-      console.log('Response:', json);
-      return json;
-    })
-    .then(data => {
-      console.log('Response:', data);
-      summary = data['response']?.summary || null;
-      altSummary = data['response']?.['alt-summary'] || null;
-      flashcards = data['response']?.flashcards || null;
-      altFlashcards = data['response']?.['alt-flashcards'] || null;
-      mindmap = typeof data['response']?.mindmap === 'string' ? JSON.parse(data['response']?.mindmap) : data['response']?.mindmap || null; altMindmap = data['response']?.['alt-mindmap'] || null;
-      toast.success('File processed successfully');
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      toast.error('An error occurred while processing the file');
-    })
-    .finally(() => {
-    });
-}
 

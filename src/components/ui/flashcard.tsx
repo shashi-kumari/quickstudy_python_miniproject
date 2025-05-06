@@ -32,10 +32,9 @@ const Flashcard = ({ question, answer, className }: FlashcardProps) => {
         </div>
         <div className={cn(
           "flip-card-back w-full h-full rounded-xl p-6 shadow-md flex flex-col justify-center items-center",
-          isDarkMode ? "bg-quickstudy-indigo bg-opacity-30" : "bg-quickstudy-purple bg-opacity-10"
-        )}>
+        )} style={{ color: isDarkMode ? 'wheat' : 'black', backgroundColor: isDarkMode ? '#1f2937' : '#ffffff' }}>
           <h3 className="text-xl font-medium mb-2 text-quickstudy-purple">Answer:</h3>
-          <p className="text-center text-lg">{answer}</p>
+          <p className="text-center text-lg" >{answer}</p>
           <div className={cn("mt-4 text-sm", isDarkMode ? "text-gray-400" : "text-gray-400")}>Click to flip back</div>
         </div>
       </div>
